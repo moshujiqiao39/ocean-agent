@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>海洋智能体</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <div class="app">
@@ -31,7 +31,7 @@
         </div>
         <button type="button" id="dev-toggle" aria-expanded="false" aria-controls="developer">开发者</button>
       </header>
-      <section id="developer" aria-label="开发者">
+      <section id="developer" hidden aria-label="开发者">
         <form id="learn-form">
           <label>知识标题
             <input id="learn-title" name="title" required maxlength="80" placeholder="例如：海月水母">
@@ -76,6 +76,6 @@
       </form>
     </main>
   </div>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=2"></script>
 </body>
 </html>

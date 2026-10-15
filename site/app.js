@@ -1,4 +1,4 @@
-import { answer, buildLibrary, toKnowledgeMarkdown } from "./search.js";
+import { answer, buildLibrary, toKnowledgeMarkdown } from "./search.js?v=2";
 
 const LEARNED_KEY = "ocean-agent-learned";
 const TOKEN_KEY = "ocean-agent-github-token";
@@ -177,7 +177,8 @@ async function loadPublished() {
 }
 
 devToggle.addEventListener("click", () => {
-  const open = !developer.classList.contains("open");
+  const open = developer.hidden;
+  developer.hidden = !open;
   developer.classList.toggle("open", open);
   devToggle.setAttribute("aria-expanded", open ? "true" : "false");
   if (open) learnTitle.focus();
