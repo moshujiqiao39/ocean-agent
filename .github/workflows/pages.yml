@@ -1,0 +1,36 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site/knowledge
+          cp site/index.html site/styles.css site/app.js site/search.js _site/
+          cp knowledge/*.md _site/knowledge/
+          python -c "import json, pathlib; files=sorted(p.name for p in pathlib.Path('knowledge').glob('*.md')); pathlib.Path('_site/knowledge/manifest.json').write_text(json.dumps(files), encoding='utf-8')"
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
