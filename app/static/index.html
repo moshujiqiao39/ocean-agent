@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>海洋智能体</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M3 20c4 0 4-4 8-4s4 4 8 4 4-4 8-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M3 14c4 0 4-4 8-4s4 4 8 4 4-4 8-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+        </svg>
+        <div>
+          <strong>海洋智能体</strong>
+          <p id="mode">正在读取知识…</p>
+        </div>
+      </div>
+      <h2>已掌握的资料</h2>
+      <ul id="docs"></ul>
+      <p class="sync">资料在 <code>knowledge</code> 目录。推送到 GitHub 后，其他电脑 <code>git pull</code> 就会用上新内容。</p>
+    </aside>
+    <main class="chat">
+      <header class="top">
+        <div>
+          <h1>提问</h1>
+          <p>用日常说法就行。回答只依据已掌握的海洋资料。</p>
+        </div>
+      </header>
+      <div id="log" class="log" aria-live="polite">
+        <div class="empty" id="empty">
+          <p>可以先问这几个：</p>
+          <div class="examples">
+            <button type="button" data-q="海里为什么有的地方水是暖的">海里为什么有的地方水是暖的</button>
+            <button type="button" data-q="海水为什么一天要涨两次">海水为什么一天要涨两次</button>
+            <button type="button" data-q="珊瑚怎么突然白了">珊瑚怎么突然白了</button>
+            <button type="button" data-q="鲸鱼晚上怎么找吃的">鲸鱼晚上怎么找吃的</button>
+          </div>
+        </div>
+      </div>
+      <form id="composer" class="composer">
+        <label class="sr" for="question">问题</label>
+        <input id="question" name="question" autocomplete="off" placeholder="例如：海边怎么鱼这么多" maxlength="2000">
+        <button type="submit" id="send">发送</button>
+      </form>
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
