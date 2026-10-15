@@ -113,7 +113,9 @@ button, input { font: inherit; }
   border-color: var(--accent);
 }
 
-#developer[hidden] { display: none !important; }
+#developer[hidden],
+#dev-editor[hidden],
+#gate-form[hidden] { display: none !important; }
 #developer {
   display: none;
   gap: 10px;

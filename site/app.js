@@ -1,8 +1,8 @@
-import { answer, buildLibrary, toKnowledgeMarkdown } from "./search.js?v=2";
+import { answer, buildLibrary, toKnowledgeMarkdown } from "./search.js?v=3";
 
 const LEARNED_KEY = "ocean-agent-learned";
-const TOKEN_KEY = "ocean-agent-github-token";
-const REPO = "moshujiqiao39/ocean-agent";
+const UNLOCK_KEY = "ocean-agent-dev-open";
+const PASS_HASH = "384fde3636e6e01e0194d2976d8f26410af3e846e573379cb1a09e2f0752d8cc";
 
 const modeEl = document.querySelector("#mode");
 const docsEl = document.querySelector("#docs");
@@ -13,14 +13,16 @@ const input = document.querySelector("#question");
 const sendBtn = document.querySelector("#send");
 const devToggle = document.querySelector("#dev-toggle");
 const developer = document.querySelector("#developer");
+const gateForm = document.querySelector("#gate-form");
+const devPass = document.querySelector("#dev-pass");
+const gateStatus = document.querySelector("#gate-status");
+const editor = document.querySelector("#dev-editor");
 const learnForm = document.querySelector("#learn-form");
 const learnTitle = document.querySelector("#learn-title");
 const learnAsks = document.querySelector("#learn-asks");
 const learnBody = document.querySelector("#learn-body");
 const learnFile = document.querySelector("#learn-file");
 const learnStatus = document.querySelector("#learn-status");
-const tokenInput = document.querySelector("#github-token");
-const syncButton = document.querySelector("#sync-learned");
 const learnedList = document.querySelector("#learned");
 
 let busy = false;
@@ -28,6 +30,7 @@ let rawOverride = "";
 let published = [];
 let learned = [];
 let library = null;
+let unlocked = sessionStorage.getItem(UNLOCK_KEY) === "1";
 
 function loadLearned() {
   try {
@@ -42,8 +45,18 @@ function saveLearned() {
   localStorage.setItem(LEARNED_KEY, JSON.stringify(learned));
 }
 
-function token() {
-  return tokenInput.value.trim();
+async function matchesPass(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const hex = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return hex === PASS_HASH;
+}
+
+function showEditor(open) {
+  gateForm.hidden = open;
+  editor.hidden = !open;
+  if (open) learnTitle.focus();
+  else devPass.focus();
 }
 
 function rebuild() {
@@ -69,7 +82,7 @@ function rebuild() {
   for (const item of learned) {
     const li = document.createElement("li");
     const name = document.createElement("span");
-    name.textContent = item.remote ? `${item.title} · 已同步` : item.title;
+    name.textContent = item.title;
     const remove = document.createElement("button");
     remove.type = "button";
     remove.dataset.file = item.file;
@@ -110,56 +123,6 @@ function ask(message) {
   input.focus();
 }
 
-function utf8ToBase64(text) {
-  const bytes = new TextEncoder().encode(text);
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
-async function publishFile(item) {
-  const response = await fetch(`https://api.github.com/repos/${REPO}/contents/knowledge/${item.file}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token()}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    body: JSON.stringify({
-      message: `学习海洋知识：${item.title}`,
-      content: utf8ToBase64(item.raw),
-      branch: "main",
-    }),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || "GitHub 没有接受这份资料");
-  item.remote = true;
-  item.sha = data.content && data.content.sha;
-}
-
-async function removeRemote(item) {
-  if (!item.remote || !item.sha || !token()) return;
-  const response = await fetch(`https://api.github.com/repos/${REPO}/contents/knowledge/${item.file}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token()}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    body: JSON.stringify({
-      message: `撤回海洋知识：${item.title}`,
-      sha: item.sha,
-      branch: "main",
-    }),
-  });
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(data.message || "GitHub 上的副本没有删除");
-  }
-}
-
 async function loadPublished() {
   const manifest = await fetch("knowledge/manifest.json");
   if (!manifest.ok) throw new Error("manifest");
@@ -181,7 +144,22 @@ devToggle.addEventListener("click", () => {
   developer.hidden = !open;
   developer.classList.toggle("open", open);
   devToggle.setAttribute("aria-expanded", open ? "true" : "false");
-  if (open) learnTitle.focus();
+  if (open) showEditor(unlocked);
+});
+
+gateForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const ok = await matchesPass(devPass.value.trim());
+  if (!ok) {
+    gateStatus.textContent = "口令不对。";
+    devPass.focus();
+    return;
+  }
+  unlocked = true;
+  sessionStorage.setItem(UNLOCK_KEY, "1");
+  gateStatus.textContent = "";
+  devPass.value = "";
+  showEditor(true);
 });
 
 learnBody.addEventListener("input", () => {
@@ -206,83 +184,29 @@ learnFile.addEventListener("change", async () => {
   learnStatus.textContent = "已读入文件，补上标题后即可学习。";
 });
 
-learnForm.addEventListener("submit", async (event) => {
+learnForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (!unlocked) return;
   const title = learnTitle.value.trim();
   const body = learnBody.value.trim();
   if (!title || !body) return;
   const file = `learned-${Date.now()}.md`;
   const raw = rawOverride || toKnowledgeMarkdown(title, learnAsks.value, body);
-  const item = { file, title, raw, remote: false, sha: "" };
-  learned.push(item);
+  learned.push({ file, title, raw });
   saveLearned();
   rebuild();
   learnForm.reset();
   rawOverride = "";
   learnStatus.textContent = "这台浏览器已经学会。";
-  if (!token()) {
-    learnStatus.textContent = "这台浏览器已经学会。要让其他电脑也学会，填入 GitHub 令牌后点「同步到其他电脑」。";
-    return;
-  }
-  try {
-    await publishFile(item);
-    saveLearned();
-    rebuild();
-    learnStatus.textContent = "已经学会，并写入 GitHub。其他电脑大约一两分钟后可用。";
-  } catch (error) {
-    learnStatus.textContent = `这台浏览器已经学会。同步失败：${error.message}`;
-  }
 });
 
-syncButton.addEventListener("click", async () => {
-  if (!token()) {
-    learnStatus.textContent = "先填入 GitHub 令牌。";
-    return;
-  }
-  localStorage.setItem(TOKEN_KEY, token());
-  const pending = learned.filter((item) => !item.remote);
-  if (!pending.length) {
-    learnStatus.textContent = "没有待同步的新知识。";
-    return;
-  }
-  syncButton.disabled = true;
-  const errors = [];
-  for (const item of pending) {
-    try {
-      await publishFile(item);
-    } catch (error) {
-      errors.push(error.message);
-    }
-  }
-  saveLearned();
-  rebuild();
-  syncButton.disabled = false;
-  learnStatus.textContent = errors.length
-    ? `有 ${errors.length} 条没有同步：${errors[0]}`
-    : "已同步到 GitHub。其他电脑大约一两分钟后可用。";
-});
-
-tokenInput.addEventListener("change", () => {
-  if (token()) localStorage.setItem(TOKEN_KEY, token());
-  else localStorage.removeItem(TOKEN_KEY);
-});
-
-learnedList.addEventListener("click", async (event) => {
+learnedList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-file]");
   if (!button) return;
-  const item = learned.find((entry) => entry.file === button.dataset.file);
-  if (!item) return;
-  button.disabled = true;
-  try {
-    await removeRemote(item);
-    learned = learned.filter((entry) => entry.file !== item.file);
-    saveLearned();
-    rebuild();
-    learnStatus.textContent = item.remote ? "已从这台浏览器和 GitHub 撤回。" : "已从这台浏览器撤回。";
-  } catch (error) {
-    button.disabled = false;
-    learnStatus.textContent = error.message;
-  }
+  learned = learned.filter((entry) => entry.file !== button.dataset.file);
+  saveLearned();
+  rebuild();
+  learnStatus.textContent = "已从这台浏览器撤回。";
 });
 
 form.addEventListener("submit", (event) => {
@@ -295,7 +219,8 @@ logEl.addEventListener("click", (event) => {
   if (button) ask(button.dataset.q);
 });
 
-tokenInput.value = localStorage.getItem(TOKEN_KEY) || "";
+localStorage.removeItem("ocean-agent-github-token");
+showEditor(unlocked);
 sendBtn.disabled = true;
 loadPublished().catch(() => {
   modeEl.textContent = "资料没有载入";
