@@ -84,6 +84,15 @@ export function visibleText(chunk, limit = 420) {
   return text.length <= limit ? text : `${text.slice(0, limit).trimEnd()}…`;
 }
 
+export function toKnowledgeMarkdown(title, questions, body) {
+  const heading = title.trim();
+  const lines = [`# ${heading}`, "", `## ${heading}`, ""];
+  const asks = questions.trim();
+  if (asks) lines.push(`人们会这样问：${asks}`, "");
+  lines.push(body.trim(), "");
+  return lines.join("\n");
+}
+
 export function buildLibrary(entries) {
   const docs = [];
   const chunks = [];

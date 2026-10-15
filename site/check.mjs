@@ -1,8 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { answer } from "./search.js";
-import { buildLibrary } from "./search.js";
+import { answer, buildLibrary, toKnowledgeMarkdown } from "./search.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "knowledge");
 const entries = readdirSync(root)
@@ -35,5 +34,10 @@ for (const [question, expect] of cases) {
   if (!ok) failures += 1;
   console.log(`${ok ? "OK  " : "FAIL"} ${question} -> ${titles}`);
 }
-console.log(`${cases.length - failures}/${cases.length} passed`);
+const custom = toKnowledgeMarkdown("海月水母", "水母有没有大脑", "海月水母没有大脑，身体里是一张神经网，用来感受水流和光线。");
+const learned = answer(buildLibrary([...entries, { file: "learned-test.md", raw: custom }]), "水母有没有大脑");
+const learnedOk = !learned.refused && learned.sources.some((item) => item.title.includes("海月水母"));
+if (!learnedOk) failures += 1;
+console.log(`${learnedOk ? "OK  " : "FAIL"} 水母有没有大脑 -> ${learned.sources.map((item) => item.title).join("、") || "-"}`);
+console.log(`${cases.length + 1 - failures}/${cases.length + 1} passed`);
 process.exit(failures ? 1 : 0);

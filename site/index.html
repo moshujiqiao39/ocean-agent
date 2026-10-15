@@ -29,7 +29,35 @@
           <h1>提问</h1>
           <p>用日常说法就行。回答只依据已掌握的海洋资料。</p>
         </div>
+        <button type="button" id="dev-toggle" aria-expanded="false" aria-controls="developer">开发者</button>
       </header>
+      <section id="developer" aria-label="开发者">
+        <form id="learn-form">
+          <label>知识标题
+            <input id="learn-title" name="title" required maxlength="80" placeholder="例如：海月水母">
+          </label>
+          <label>日常问法
+            <textarea id="learn-asks" name="asks" maxlength="500" placeholder="人们可能会怎么问，用句号分开"></textarea>
+          </label>
+          <label>知识内容
+            <textarea id="learn-body" name="body" required maxlength="8000" placeholder="写下要让智能体掌握的海洋知识"></textarea>
+          </label>
+          <label class="file-label">或上传文本
+            <input id="learn-file" name="file" type="file" accept=".md,.txt,.markdown,text/plain">
+          </label>
+          <div class="dev-actions">
+            <button type="submit" id="learn-submit">让智能体学习</button>
+            <button type="button" id="sync-learned">同步到其他电脑</button>
+          </div>
+          <p id="learn-status" role="status"></p>
+        </form>
+        <label>GitHub 令牌
+          <input id="github-token" type="password" autocomplete="off" placeholder="有仓库写入权限的令牌，只保存在这台浏览器">
+        </label>
+        <p class="hint">不填令牌时，新知识只在这台浏览器里生效。填入令牌后再同步，其他电脑打开网页就能用到。</p>
+        <h2>新学习的知识</h2>
+        <ul id="learned"></ul>
+      </section>
       <div id="log" class="log" aria-live="polite">
         <div class="empty" id="empty">
           <p>可以先问这几个：</p>

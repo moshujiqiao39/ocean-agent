@@ -89,8 +89,82 @@ button, input { font: inherit; }
   background: var(--paper);
 }
 
-.top { padding: 20px 28px 0; }
+.top {
+  padding: 20px 28px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
 .top h1 { margin: 0 0 4px; font-size: 22px; font-weight: 650; }
+
+#dev-toggle {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  flex: none;
+}
+#dev-toggle[aria-expanded="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+#developer {
+  display: none;
+  gap: 10px;
+  margin: 14px 28px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+#developer.open { display: grid; }
+#developer label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+#developer input, #developer textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+#developer textarea { min-height: 68px; resize: vertical; }
+.dev-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#learn-submit, #sync-learned {
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+#learn-submit {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+#learn-status { margin: 0; min-height: 1.2em; font-size: 13px; }
+#developer h2 { margin: 4px 0 0; font-size: 13px; }
+#learned { list-style: none; margin: 0; padding: 0; }
+#learned li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+#learned button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+.hint { margin: 0; color: var(--muted); font-size: 13px; }
 
 .log {
   flex: 1;
@@ -168,4 +242,5 @@ button, input { font: inherit; }
   #docs li { border: 0; white-space: nowrap; }
   .sync { display: none; }
   .top, .log, .composer { padding-left: 16px; padding-right: 16px; }
+  #developer { margin-left: 16px; margin-right: 16px; }
 }
